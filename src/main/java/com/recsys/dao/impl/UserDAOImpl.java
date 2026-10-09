@@ -97,6 +97,39 @@ public class UserDAOImpl implements UserDAO {
         }
     }
 
+    @Override
+    public User findByEmail(String email) throws DAOException {
+        String sql = "SELECT * FROM users WHERE email = ?";
+        try (Connection con = DBConnection.getDataSource().getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, email);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? mapRow(rs) : null;
+            }
+        } catch (SQLException e) {
+            throw new DAOException("Error fetching user by email", e);
+        }
+    }
+
+    @Override
+    public List<User> search(String term) throws DAOException {
+        String sql = "SELECT * FROM users WHERE name LIKE ? OR email LIKE ? ORDER BY id";
+        String like = "%" + (term == null ? "" : term.trim()) + "%";
+        try (Connection con = DBConnection.getDataSource().getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, like);
+            ps.setString(2, like);
+            try (ResultSet rs = ps.executeQuery()) {
+                List<User> list = new ArrayList<>();
+                while (rs.next()) {
+                    list.add(mapRow(rs));
+                }
+                return list;
+            }
+        } catch (SQLException e) {
+            throw new DAOException("Error searching users", e);
+        }
+    }
     private User mapRow(ResultSet rs) throws SQLException {
         Role role = Role.valueOf(rs.getString("role"));
         User u = (role == Role.ADMIN) ? new com.recsys.model.Admin() : new User();
@@ -109,3 +142,4 @@ public class UserDAOImpl implements UserDAO {
         return u;
     }
 }
+
