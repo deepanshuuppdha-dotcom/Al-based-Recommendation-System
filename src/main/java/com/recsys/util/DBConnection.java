@@ -28,6 +28,7 @@ public final class DBConnection {
         }
 
         HikariConfig config = new HikariConfig();
+        config.setDriverClassName("com.mysql.cj.jdbc.Driver");
         config.setJdbcUrl(props.getProperty("url"));
         config.setUsername(props.getProperty("username"));
         config.setPassword(props.getProperty("password"));
@@ -55,3 +56,4 @@ public final class DBConnection {
         }
     }
 }
+
