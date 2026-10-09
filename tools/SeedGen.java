@@ -160,15 +160,37 @@ public class SeedGen {
     private static void writeFeedback(BufferedWriter w) throws IOException {
         w.write("INSERT INTO recommendation_feedback (recommendation_id,shown_at,clicked,converted) VALUES\n");
         int total = 30; // same ids as recommendations inserted above (auto‑increment starts at 1)
+        // Desired click counts per algorithm
+        int hybridClicks = 0, contentClicks = 0, collabClicks = 0, popularityClicks = 0;
+        int targetHybrid = 6, targetContent = 5, targetCollab = 4, targetPopularity = 2;
+        int convertedCount = 0;
+        int targetConverted = 6; // total converted rows across all algorithms
         for (int i = 1; i <= total; i++) {
             String ts = String.format("2026-%02d-%02d %02d:%02d:00",
                     RAND.nextInt(2) + 9,
                     RAND.nextInt(28) + 1,
                     RAND.nextInt(24),
                     RAND.nextInt(60));
-            boolean clicked = RAND.nextBoolean();
-            boolean converted = clicked && RAND.nextBoolean();
-            w.write(String.format("(%d,'%s',%s,%s)", i, ts, clicked, converted));
+            // Determine algorithm for this recommendation (same logic as writeRecommendations)
+            String algo = ALGORITHMS[i % ALGORITHMS.length];
+            boolean clicked = false;
+            switch (algo) {
+                case "HYBRID":
+                    if (hybridClicks < targetHybrid) { clicked = true; hybridClicks++; }
+                    break;
+                case "CONTENT":
+                    if (contentClicks < targetContent) { clicked = true; contentClicks++; }
+                    break;
+                case "COLLAB":
+                    if (collabClicks < targetCollab) { clicked = true; collabClicks++; }
+                    break;
+                case "POPULARITY":
+                    if (popularityClicks < targetPopularity) { clicked = true; popularityClicks++; }
+                    break;
+            }
+            boolean converted = clicked && (convertedCount < targetConverted);
+            if (converted) { convertedCount++; }
+            w.write(String.format("(%d,'%s',%s,%s)", i, ts, clicked ? "TRUE" : "FALSE", converted ? "TRUE" : "FALSE"));
             w.write(i == total ? ";\n" : ",\n");
         }
     }
