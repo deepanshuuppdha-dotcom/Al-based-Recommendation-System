@@ -11,7 +11,8 @@
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <jakarta.servlet.version>6.0.0</jakarta.servlet.version>
-        <jakarta.jsp.jstl.version>3.0.0</jakarta.jsp.jstl.version>
+        <jakarta.jstl.api.version>3.0.0</jakarta.jstl.api.version>
+        <jakarta.jstl.impl.version>3.0.1</jakarta.jstl.impl.version>
     </properties>
     <dependencies>
         <!-- Servlet API (provided by Tomcat) -->
@@ -21,16 +22,17 @@
             <version>${jakarta.servlet.version}</version>
             <scope>provided</scope>
         </dependency>
-        <!-- JSP + JSTL -->
-        <dependency>
-            <groupId>jakarta.servlet.jsp.jstl</groupId>
-            <artifactId>jakarta.servlet.jsp.jstl</artifactId>
-            <version>${jakarta.jsp.jstl.version}</version>
-        </dependency>
+        <!-- JSTL API -->
         <dependency>
             <groupId>jakarta.servlet.jsp.jstl</groupId>
             <artifactId>jakarta.servlet.jsp.jstl-api</artifactId>
-            <version>${jakarta.jsp.jstl.version}</version>
+            <version>${jakarta.jstl.api.version}</version>
+        </dependency>
+        <!-- JSTL implementation (GlassFish) -->
+        <dependency>
+            <groupId>org.glassfish.web</groupId>
+            <artifactId>jakarta.servlet.jsp.jstl</artifactId>
+            <version>${jakarta.jstl.impl.version}</version>
         </dependency>
         <!-- MySQL Connector -->
         <dependency>
@@ -55,6 +57,12 @@
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
             <version>2.10</version>
+        </dependency>
+        <!-- SLF4J API (pinned so HikariCP does not pull an alpha version) -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>2.0.9</version>
         </dependency>
         <!-- SLF4J Simple Logger -->
         <dependency>
@@ -81,7 +89,7 @@
                     <release>17</release>
                 </configuration>
             </plugin>
-            <!-- WAR plugin (default) -->
+            <!-- WAR plugin -->
             <plugin>
                 <artifactId>maven-war-plugin</artifactId>
                 <version>3.3.2</version>
@@ -89,7 +97,7 @@
                     <failOnMissingWebXml>false</failOnMissingWebXml>
                 </configuration>
             </plugin>
-            <!-- Surefire for running JUnit5 -->
+            <!-- Surefire for running JUnit 5 -->
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.1.2</version>

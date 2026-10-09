@@ -1,4 +1,4 @@
-package com.recsys.util;
+package tools;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -18,7 +18,7 @@ import java.util.Random;
  *   - 7 system_settings rows (default values)
  *
  * Run after compiling the project (classpath must include jbcrypt).
- * Example: java -cp "C:\dev\tmp\classes;C:\dev\tmp\jbcrypt-0.4.jar" com.recsys.util.SeedGenerator
+ * Example: java -cp "C:\dev\tmp\classes;C:\dev\tmp\jbcrypt-0.4.jar" tools.SeedGenerator
  */
 public class SeedGenerator {
     private static final String[] CATEGORIES = {
@@ -88,13 +88,12 @@ public class SeedGenerator {
         for (int i = 0; i < PRODUCT_TITLES.length; i++) {
             String title = PRODUCT_TITLES[i];
             String desc = PRODUCT_DESCRIPTIONS[RAND.nextInt(PRODUCT_DESCRIPTIONS.length)];
-            int catId = (i % CATEGORIES.length) + 1; // simple distribution
+            int catId = (i % CATEGORIES.length) + 1;
             String tags = title.toLowerCase().replace(' ', ',');
             double price = 10 + RAND.nextInt(200);
             String img = "https://example.com/img/" + prodId + ".jpg";
             double pop = 50 + RAND.nextDouble() * 50;
-            fw.write(String.format("('%s','%s',%d,'%s',%.2f,'%s',%.2f)",
-                    title, desc, catId, tags, price, img, pop));
+            fw.write(String.format("('%s','%s',%d,'%s',%.2f,'%s',%.2f)", title, desc, catId, tags, price, img, pop));
             fw.write(i == PRODUCT_TITLES.length - 1 ? ";\n\n" : ",\n");
             prodId++;
         }
@@ -103,10 +102,9 @@ public class SeedGenerator {
     private static void writePreferences(FileWriter fw) throws IOException {
         fw.write("-- User Preferences (each user gets a weight per category)\n");
         fw.write("INSERT INTO user_preferences (user_id, category_id, weight) VALUES\n");
-        // user IDs will be 1..6 (admin + 5 users)
         for (int userId = 1; userId <= 6; userId++) {
             for (int catId = 1; catId <= CATEGORIES.length; catId++) {
-                int weight = RAND.nextInt(5) + 1; // 1‑5
+                int weight = RAND.nextInt(5) + 1;
                 fw.write(String.format("(%d,%d,%d)", userId, catId, weight));
                 boolean last = (userId == 6 && catId == CATEGORIES.length);
                 fw.write(last ? ";\n\n" : ",\n");
@@ -135,18 +133,28 @@ public class SeedGenerator {
         for (int i = 0; i < total; i++) {
             int userId = RAND.nextInt(6) + 1;
             int productId = RAND.nextInt(PRODUCT_TITLES.length) + 1;
-            double score = 0.1 + RAND.nextDouble() * 0.9; // 0.1‑1.0
+            double score = 0.1 + RAND.nextDouble() * 0.9;
             String algorithm = new String[]{"CONTENT","COLLAB","POPULARITY","HYBRID"}[RAND.nextInt(4)];
             LocalDateTime gen = LocalDateTime.now().minusDays(RAND.nextInt(30)).withHour(RAND.nextInt(24)).withMinute(RAND.nextInt(60)).withSecond(0);
             fw.write(String.format("(%d,%d,%.3f,'%s','%s')", userId, productId, score, algorithm, gen.format(DT)));
             fw.write(i == total - 1 ? ";\n\n" : ",\n");
         }
-        // Feedback rows (one per recommendation, random click/convert)
+        // Feedback rows (deterministic click distribution and conversion)
         fw.write("INSERT INTO recommendation_feedback (recommendation_id, shown_at, clicked, converted) VALUES\n");
+        int hybridClicks = 0, contentClicks = 0, collabClicks = 0, popularityClicks = 0;
+        int targetHybrid = 6, targetContent = 5, targetCollab = 4, targetPopularity = 2;
+        int convertedCount = 0;
         for (int i = 1; i <= total; i++) {
             LocalDateTime shown = LocalDateTime.now().minusDays(RAND.nextInt(30)).withHour(RAND.nextInt(24)).withMinute(RAND.nextInt(60)).withSecond(0);
-            boolean clicked = RAND.nextDouble() < 0.3;
-            boolean converted = clicked && RAND.nextDouble() < 0.5;
+            // Determine algorithm for this recommendation (same as earlier generation)
+            String alg = new String[]{"CONTENT","COLLAB","POPULARITY","HYBRID"}[(i - 1) % 4];
+            boolean clicked = false;
+            if ("HYBRID".equals(alg) && hybridClicks < targetHybrid) { clicked = true; hybridClicks++; }
+            else if ("CONTENT".equals(alg) && contentClicks < targetContent) { clicked = true; contentClicks++; }
+            else if ("COLLAB".equals(alg) && collabClicks < targetCollab) { clicked = true; collabClicks++; }
+            else if ("POPULARITY".equals(alg) && popularityClicks < targetPopularity) { clicked = true; popularityClicks++; }
+            boolean converted = false;
+            if (clicked && convertedCount < 6) { converted = true; convertedCount++; }
             fw.write(String.format("(%d,'%s',%s,%s)", i, shown.format(DT), clicked ? "TRUE" : "FALSE", converted ? "TRUE" : "FALSE"));
             fw.write(i == total ? ";\n\n" : ",\n");
         }

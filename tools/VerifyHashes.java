@@ -1,4 +1,4 @@
-package com.recsys.util;
+package tools;
 
 public class VerifyHashes {
     public static void main(String[] args) {
@@ -8,7 +8,7 @@ public class VerifyHashes {
         }
         String hash = args[0];
         String plain = args[1];
-        boolean ok = PasswordUtil.verify(plain, hash);
+        boolean ok = com.recsys.util.PasswordUtil.verify(plain, hash);
         System.out.println(ok);
     }
 }
