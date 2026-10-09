@@ -1,0 +1,4 @@
+# Example DB connection – copy to db.properties and fill real values
+url=jdbc:mysql://localhost:3306/recsys_db?useSSL=false&serverTimezone=UTC
+username=your_mysql_user
+password=your_mysql_password

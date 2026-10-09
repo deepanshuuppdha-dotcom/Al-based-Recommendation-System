@@ -1,5 +1,5 @@
 target/
 *.log
-db.properties
 .idea/
 .vscode/
+db.properties
